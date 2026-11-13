@@ -90,6 +90,35 @@ possible. The provider's HTML is never output as it came: it is parsed and rebui
 
 `privacyEnhancedYouTube()` plays YouTube videos from `www.youtube-nocookie.com`.
 
+### Content Security Policy
+
+oEmbed lookups happen on the server, so they need nothing from a CSP. But pages that show embeds load the providers'
+players, scripts and images in the browser. If your site sends a `Content-Security-Policy` header, allow the
+providers you use. For the built-in ones:
+
+| Provider | `frame-src` | `script-src` | `connect-src` | `img-src` |
+|---|---|---|---|---|
+| YouTube | `www.youtube.com`, `www.youtube-nocookie.com` | | | |
+| Vimeo | `player.vimeo.com` | | | |
+| Spotify | `open.spotify.com` | | | |
+| SoundCloud | `w.soundcloud.com` | | | |
+| TikTok | `www.tiktok.com` | | | |
+| X | `platform.twitter.com`, `platform.x.com` | `platform.x.com`, `platform.twitter.com` | `syndication.twitter.com`, `cdn.syndication.twimg.com` | |
+| Bluesky | `embed.bsky.app` | `embed.bsky.app` | | |
+| Flickr | | | | `*.staticflickr.com` |
+
+All of these are `https:`. For a provider you add, `frame-src` needs its `iframe()` hosts and `script-src` its
+`script()` host. A provider's script may load more from its own domains: the X entries above are what its script
+loaded when this was written, and providers do change them, so check the browser console for CSP errors after adding
+or updating one.
+
+The admin panel needs the same if it sends a CSP:
+
+- With `EditorPreview::Card` (the default), cards show the thumbnail URL the provider answered, such as `i.ytimg.com`
+  or `i.vimeocdn.com`. Allow those hosts in `img-src`, or allow `https:` images.
+- With `EditorPreview::Embed`, the players load too, so the panel needs the `frame-src` hosts and the photo `img-src`
+  hosts. No provider scripts run in the panel.
+
 ### Bare URLs
 
 To show a paragraph that holds nothing but a URL (as text, or as a link to itself) as that URL's embed, as WordPress
