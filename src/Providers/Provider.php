@@ -34,6 +34,8 @@ class Provider
 
     protected ?string $label = null;
 
+    protected bool $sandboxesIframes = false;
+
     final public function __construct(protected string $name)
     {
         if (preg_match('/^[a-z0-9][a-z0-9-]*$/', $name) !== 1) {
@@ -44,6 +46,23 @@ class Provider
     public static function make(string $name): static
     {
         return new static($name);
+    }
+
+    /**
+     * The provider for a page found by discovery: its player may only come from the page's own host, and plays in a
+     * sandbox that keeps it from navigating the page it's shown on. It has no endpoint or URL patterns of its own.
+     */
+    public static function discovered(string $url): ?static
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        if (! is_string($host) || $host === '') {
+            return null;
+        }
+
+        $host = rtrim(strtolower($host), '.');
+
+        return static::make('discovered')->label($host)->iframe([$host])->sandboxIframes();
     }
 
     public function label(string $label): static
@@ -115,6 +134,22 @@ class Provider
         $this->scriptUrl = $url;
 
         return $this;
+    }
+
+    /**
+     * Plays the provider's iframes with a `sandbox` attribute: scripts and popups run, but the player can't navigate
+     * the page it's shown on.
+     */
+    public function sandboxIframes(bool $condition = true): static
+    {
+        $this->sandboxesIframes = $condition;
+
+        return $this;
+    }
+
+    public function sandboxesIframes(): bool
+    {
+        return $this->sandboxesIframes;
     }
 
     public function getName(): string
