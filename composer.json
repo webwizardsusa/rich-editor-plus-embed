@@ -27,7 +27,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "webwizardsusa/filament-rich-editor-plus": "*",
+        "webwizardsusa/filament-rich-editor-plus": "^0.1.0 || dev-main",
         "spatie/laravel-package-tools": "^1.92"
     },
     "autoload": {
