@@ -1,0 +1,65 @@
+{
+    "name": "webwizardsusa/rich-editor-plus-embed",
+    "description": "oEmbed embeds for Rich Editor Plus: paste a YouTube, Vimeo, X or other supported URL and it becomes an embed.",
+    "keywords": [
+        "laravel",
+        "filamentphp",
+        "filament",
+        "filament-plugin",
+        "tiptap",
+        "rich-editor",
+        "oembed",
+        "embed",
+        "webwizardsusa"
+    ],
+    "homepage": "https://github.com/webwizardsusa/rich-editor-plus-embed",
+    "support": {
+        "issues": "https://github.com/webwizardsusa/rich-editor-plus-embed/issues",
+        "source": "https://github.com/webwizardsusa/rich-editor-plus-embed"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jamie Holly",
+            "email": "jamie@webwizardsusa.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "webwizardsusa/filament-rich-editor-plus": "*",
+        "spatie/laravel-package-tools": "^1.92"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webwizardsusa\\RichEditorPlusEmbed\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Webwizardsusa\\RichEditorPlusEmbed\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webwizardsusa\\RichEditorPlusEmbed\\RichEditorPlusEmbedServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^5.2",
+        "pestphp/pest-plugin-laravel": "^5.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

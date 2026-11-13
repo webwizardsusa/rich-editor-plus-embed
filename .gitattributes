@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+# Left out of the archive Composer installs: only src/, resources/, dist/ and the docs ship.
+/tests              export-ignore
+/resources/js       export-ignore
+/resources/css      export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/package.json       export-ignore
+/phpunit.xml        export-ignore
+/vite.config.js     export-ignore
