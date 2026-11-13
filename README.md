@@ -171,6 +171,23 @@ written before the plugin was added, or pasted elsewhere, show its embeds.
 Paragraphs aren't nodes the renderer can patch in stored HTML, so with this plugin stored HTML is parsed whole when
 rendered, which is slower for long documents. That's why it's a separate plugin.
 
+## Markdown
+
+Embeds work on Rich Editor Plus fields that store Markdown, and `BareUrlEmbedPlugin` works there too. Markdown has no
+syntax for an embed, so an embed is written as its stored `<figure>`, an HTML block on its own line:
+
+```markdown
+Some text before.
+
+<figure class="rep-embed" data-type="embed" data-url="https://youtu.be/abc" data-provider="youtube" data-title="A video"><a href="https://youtu.be/abc">A video</a><figcaption>Watch this</figcaption></figure>
+
+Some text after.
+```
+
+Markdown keeps raw HTML, so this reads back as the same embed, with its caption, title and thumbnail. Outside the
+editor, it shows as the link (and caption) wherever Markdown is rendered. Line breaks in a title or caption become
+spaces, because a blank line would end the HTML block.
+
 ## How embeds are stored
 
 Only the URL and a little metadata are stored. The provider's markup is built when content is rendered, so stored

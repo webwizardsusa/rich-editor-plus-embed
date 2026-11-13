@@ -8,6 +8,9 @@ use Webwizardsusa\RichEditorPlus\Content\ContentSpec;
 use Webwizardsusa\RichEditorPlus\Content\NodeSpec;
 use Webwizardsusa\RichEditorPlus\Plugins\Contracts\AnswersEditorRequests;
 use Webwizardsusa\RichEditorPlus\Plugins\Contracts\PatchesRenderedMarkup;
+use Webwizardsusa\RichEditorPlus\Plugins\Markdown\Contracts\ProvidesMarkdownRules;
+use Webwizardsusa\RichEditorPlus\Plugins\Markdown\Serializing\MarkdownWriter;
+use Webwizardsusa\RichEditorPlus\Plugins\Markdown\Serializing\NodeRule;
 use Webwizardsusa\RichEditorPlus\Plugins\Plugin;
 use Webwizardsusa\RichEditorPlus\Rendering\RichContentPlusRenderer;
 use Webwizardsusa\RichEditorPlus\RichEditorPlus;
@@ -38,7 +41,7 @@ use Webwizardsusa\RichEditorPlusEmbed\Rendering\EmbedMarkup;
  * node in its transient `oembed` attribute, which never reaches stored HTML. {@see EmbedMarkup} then rebuilds the
  * provider's markup from it; an embed without a usable answer is shown as its stored link.
  */
-class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRenderedMarkup
+class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRenderedMarkup, ProvidesMarkdownRules
 {
     public const string ID = 'webwizardsusa/embed';
 
@@ -423,6 +426,47 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
             '.rep-embed blockquote{margin:0}',
             '.rep-embed figcaption{font-size:.875em;opacity:.8;margin-top:.375rem}',
         ]);
+    }
+
+    /**
+     * Markdown has no syntax for an embed, so it is written as its stored `<figure>`, an HTML block on a line of its
+     * own. Markdown keeps raw HTML, so it reads back as the same embed, caption, title and thumbnail included.
+     */
+    public function getMarkdownNodeRules(): array
+    {
+        return [
+            'embed' => NodeRule::using(fn (array $node, MarkdownWriter $writer) => $writer->write($this->markdownHtml($node))),
+        ];
+    }
+
+    public function getMarkdownMarkRules(): array
+    {
+        return [];
+    }
+
+    /**
+     * The embed's stored HTML on one line. A blank line would end the HTML block, so runs of whitespace in the title
+     * and caption become single spaces. An embed without a usable URL writes nothing.
+     *
+     * @param  array<string, mixed>  $node
+     */
+    protected function markdownHtml(array $node): string
+    {
+        $attrs = is_array($node['attrs'] ?? null) ? $node['attrs'] : [];
+
+        if (! static::isAllowedUrl($attrs['url'] ?? null)) {
+            return '';
+        }
+
+        foreach (['title', 'caption'] as $name) {
+            if (is_string($attrs[$name] ?? null)) {
+                $attrs[$name] = trim((string) preg_replace('/\s+/u', ' ', $attrs[$name]));
+            }
+        }
+
+        return RichContentPlusRenderer::make(['type' => 'doc', 'content' => [['type' => 'embed', 'attrs' => $attrs]]])
+            ->plugins([$this])
+            ->toStorableHtml();
     }
 
     public function getJsExtension(): JsExtension
