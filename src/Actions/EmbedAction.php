@@ -32,14 +32,14 @@ class EmbedAction
             ->schema([
                 TextInput::make('url')
                     ->label(__('rich-editor-plus-embed::plugins.embed.modal.url'))
-                    ->helperText(__('rich-editor-plus-embed::plugins.embed.modal.url_help', [
+                    ->helperText(__($plugin->discovers() ? 'rich-editor-plus-embed::plugins.embed.modal.url_help_discovery' : 'rich-editor-plus-embed::plugins.embed.modal.url_help', [
                         'providers' => implode(', ', array_map(static fn (Provider $provider): string => $provider->getLabel(), $plugin->getProviders()->all())),
                     ]))
                     ->url()
                     ->required()
                     ->maxLength(2048)
                     ->rule(static fn (): Closure => static function (string $attribute, mixed $value, Closure $fail) use ($plugin): void {
-                        if ($plugin->getProviders()->match(is_string($value) ? trim($value) : null) === null) {
+                        if (! $plugin->takes($value)) {
                             $fail(__('rich-editor-plus-embed::plugins.embed.modal.url_unsupported'));
 
                             return;

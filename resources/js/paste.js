@@ -24,11 +24,12 @@ const pastedParagraph = (doc, pastedUrl, near) => {
 }
 
 /**
- * Pasting a URL a provider takes into an empty paragraph embeds it, as WordPress does. The URL goes in at once as a
- * link; the server looks it up (`EmbedPlugin` `resolve` request) and, if it can be embedded, the link becomes the embed.
- * The swap is its own undo step, so undo turns the embed back into the link. URLs the server refuses stay links.
+ * Pasting a URL a provider takes (or, with discovery, any URL) into an empty paragraph embeds it, as WordPress does.
+ * The URL goes in at once as a link; the server looks it up (`EmbedPlugin` `resolve` request) and, if it can be
+ * embedded, the link becomes the embed. The swap is its own undo step, so undo turns the embed back into the link.
+ * URLs the server refuses stay links.
  */
-export function createEmbedPaste({ hosts = [], labels = {} } = {}, { callPlugin, processing } = {}) {
+export function createEmbedPaste({ hosts = [], discovery = false, labels = {} } = {}, { callPlugin, processing } = {}) {
     return Extension.create({
         name: 'embedPaste',
 
@@ -49,7 +50,8 @@ export function createEmbedPaste({ hosts = [], labels = {} } = {}, { callPlugin,
                                 pasted === '' ||
                                 /\s/.test(pasted) ||
                                 !isAllowedUrl(pasted) ||
-                                !matchesHost(pasted, hosts) ||
+                                // With discovery (PHP: `EmbedPlugin::discovery()`), the server may embed any site.
+                                (!discovery && !matchesHost(pasted, hosts)) ||
                                 !selection.empty ||
                                 $from.parent.type.name !== 'paragraph' ||
                                 $from.parent.content.size !== 0 ||

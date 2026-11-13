@@ -10,6 +10,7 @@ return [
             'submit' => 'Embed',
             'url' => 'URL',
             'url_help' => 'A link to a page on :providers.',
+            'url_help_discovery' => 'A link to a page on :providers, or on another site that supports oEmbed.',
             'url_unsupported' => 'This site can’t be embedded.',
             'url_unavailable' => 'Nothing could be embedded from this URL. Check that the page exists and is public.',
             'caption' => 'Caption',

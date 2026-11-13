@@ -15,6 +15,7 @@ use Webwizardsusa\RichEditorPlus\Support\BlockType;
 use Webwizardsusa\RichEditorPlus\Support\JsExtension;
 use Webwizardsusa\RichEditorPlus\Support\Tool;
 use Webwizardsusa\RichEditorPlusEmbed\Actions\EmbedAction;
+use Webwizardsusa\RichEditorPlusEmbed\OEmbed\Discovery;
 use Webwizardsusa\RichEditorPlusEmbed\OEmbed\EmbedCache;
 use Webwizardsusa\RichEditorPlusEmbed\OEmbed\OEmbedClient;
 use Webwizardsusa\RichEditorPlusEmbed\OEmbed\OEmbedResponse;
@@ -66,6 +67,8 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
     protected ?int $maxWidth = null;
 
     protected bool $isPrivacyEnhancedYouTube = false;
+
+    protected bool $discovers = false;
 
     /**
      * Embeds from these providers instead of the built-in ones.
@@ -141,6 +144,24 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
         return $this->editorPreview;
     }
 
+    /**
+     * Also embeds URLs no provider takes, through the oEmbed endpoint their page names (oEmbed discovery). Off by
+     * default: the server then fetches pages people link to. Every request is checked by {@see UrlGuard}, so private
+     * and local addresses are never fetched. A discovered player may only come from the page's own host, and plays in
+     * a sandbox; posts that need a script are shown as their link.
+     */
+    public function discovery(bool $condition = true): static
+    {
+        $this->discovers = $condition;
+
+        return $this;
+    }
+
+    public function discovers(): bool
+    {
+        return $this->discovers;
+    }
+
     public function getProviders(): ProviderRegistry
     {
         return ProviderRegistry::make($this->providers ?? BuiltInProviders::all())
@@ -157,7 +178,13 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
 
     public function getResolver(): Resolver
     {
-        return new Resolver($this->getProviders(), OEmbedClient::fromConfig(), EmbedCache::fromConfig(), $this->getMaxWidth());
+        return new Resolver(
+            $this->getProviders(),
+            OEmbedClient::fromConfig(),
+            EmbedCache::fromConfig(),
+            $this->getMaxWidth(),
+            $this->discovers ? Discovery::fromConfig() : null,
+        );
     }
 
     public function getId(): string
@@ -166,16 +193,20 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
     }
 
     /**
-     * The attributes of an embed for the URL, from its provider's answer. Null when no provider takes the URL or its
-     * provider has nothing to embed for it.
+     * The attributes of an embed for the URL, from its provider's answer. Null when nothing takes the URL or there is
+     * nothing to embed for it. A URL found by discovery has no provider name.
      *
-     * @return array{url: string, provider: string, title: ?string, thumbnail: ?string} | null
+     * @return array{url: string, provider: ?string, title: ?string, thumbnail: ?string} | null
      */
     public function resolveEmbed(string $url): ?array
     {
         $url = trim($url);
-        $provider = static::isAllowedUrl($url) ? $this->getProviders()->match($url) : null;
-        $answer = $provider === null ? null : $this->getResolver()->resolve($url);
+
+        if (! $this->takes($url)) {
+            return null;
+        }
+
+        $answer = $this->getResolver()->resolve($url);
 
         if ($answer === null) {
             return null;
@@ -183,7 +214,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
 
         return [
             'url' => $url,
-            'provider' => $provider->getName(),
+            'provider' => $this->getProviders()->match($url)?->getName(),
             'title' => $answer->title,
             'thumbnail' => $answer->thumbnailUrl,
         ];
@@ -245,9 +276,21 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
     /**
      * @return array<string, mixed>
      */
+    /**
+     * Whether the URL may be looked up at all: one a provider takes, or, with discovery, any http(s) URL.
+     */
+    public function takes(mixed $url): bool
+    {
+        if (! is_string($url) || ! static::isAllowedUrl($url) || strlen(trim($url)) > ProviderRegistry::MAX_URL_LENGTH) {
+            return false;
+        }
+
+        return $this->discovers || $this->getProviders()->match(trim($url)) !== null;
+    }
+
     protected function answerResolveRequest(mixed $url): array
     {
-        if (! is_string($url) || strlen($url) > ProviderRegistry::MAX_URL_LENGTH || $this->getProviders()->match(trim($url)) === null) {
+        if (! $this->takes($url)) {
             return ['error' => __('rich-editor-plus-embed::plugins.embed.modal.url_unsupported')];
         }
 
@@ -298,6 +341,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
 
         $providers = $this->getProviders();
         $markup = new EmbedMarkup($this->isPrivacyEnhancedYouTube);
+        $discovers = $this->discovers;
 
         return [
             NodeSpec::make('embed')
@@ -318,6 +362,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
                     $providers,
                     $markup,
                     is_string($attributes['oembed'] ?? null) ? $attributes['oembed'] : null,
+                    $discovers,
                 ))
                 ->textUsing(static fn (array $node): string => static::isAllowedUrl($node['attrs']['url'] ?? null) ? trim($node['attrs']['url']) : ''),
         ];
@@ -393,6 +438,8 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
             'preview' => $this->editorPreview->value,
             // Only for spotting pasted URLs worth asking about; the server decides what is embedded.
             'hosts' => array_values(array_unique($hosts)),
+            // With discovery, any pasted URL is worth asking about.
+            'discovery' => $this->discovers,
             'providers' => array_map(static fn (Provider $provider): string => $provider->getLabel(), $providers),
             'labels' => [
                 'loading' => __('rich-editor-plus-embed::plugins.embed.editor.loading'),
@@ -465,12 +512,13 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
      * An embed's figure. The attributes come from the browser, so each one is checked again here: a node without a
      * usable URL renders nothing, the provider is the one that takes the URL, and a thumbnail that isn't http(s) is
      * dropped. With an oEmbed answer (only while rendering for display) the figure holds the provider's markup;
-     * without one, or when the answer can't be embedded safely, it holds the link that is stored.
+     * without one, or when the answer can't be embedded safely, it holds the link that is stored. With discovery, a
+     * URL no provider takes is shown through its page's own provider ({@see Provider::discovered()}).
      *
      * @param  array<string, mixed>  $attrs
      * @return array<mixed>
      */
-    protected static function renderFigure(array $attrs, ProviderRegistry $providers, EmbedMarkup $markup, ?string $oembed = null): array
+    protected static function renderFigure(array $attrs, ProviderRegistry $providers, EmbedMarkup $markup, ?string $oembed = null, bool $discovers = false): array
     {
         if (! static::isAllowedUrl($attrs['url'] ?? null)) {
             return ['figure', ['class' => 'rep-embed', 'data-type' => 'embed']];
@@ -491,9 +539,10 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
             'data-thumbnail' => static::isAllowedUrl($attrs['thumbnail'] ?? null) ? trim($attrs['thumbnail']) : null,
         ], static fn (?string $value): bool => $value !== null);
 
-        $decoded = $provider !== null && $oembed !== null ? json_decode($oembed, true) : null;
+        $shownThrough = $provider ?? ($discovers ? Provider::discovered($url) : null);
+        $decoded = $shownThrough !== null && $oembed !== null ? json_decode($oembed, true) : null;
         $answer = is_array($decoded) ? OEmbedResponse::fromArray($decoded) : null;
-        $display = $answer !== null ? $markup->build($provider, $answer, $url) : null;
+        $display = $answer !== null ? $markup->build($shownThrough, $answer, $url) : null;
         $captionElement = $caption !== null ? [['figcaption', $caption]] : [];
 
         if ($display === null) {

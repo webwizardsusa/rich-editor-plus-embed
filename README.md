@@ -66,6 +66,36 @@ Answers are cached (a week by default, ten minutes for a failed lookup) in the s
 `php artisan vendor:publish --tag=rich-editor-plus-embed-config` to change the times, the timeout or the default
 `maxwidth`.
 
+### Discovery
+
+Sites that aren't providers can still be embedded if their pages name an oEmbed endpoint, as WordPress sites and
+many others do:
+
+```php
+EmbedPlugin::make()->discovery();
+```
+
+With discovery on, a URL no provider takes is looked up by fetching its page, finding the
+`<link rel="alternate" type="application/json+oembed">` it names, and asking that endpoint. It's off by default,
+because the server then fetches pages that people link to. Discovery comes with some limits:
+
+- **Private networks are never reached.** Every request (the page, each redirect and the endpoint) goes through
+  `UrlGuard`. That allows only http(s) on the standard ports, with no credentials in the URL, to hosts whose every
+  address is public. So it refuses loopback, private, link-local (including cloud metadata at `169.254.169.254`),
+  shared and reserved ranges, IPv4 inside IPv6, numeric disguises like `2130706433` or `127.1`, and local names like
+  `localhost` or `*.internal`. Each request is pinned to the address that was checked, so DNS can't switch it to a
+  private one in between, and redirects are followed by hand (at most 3), each one checked again.
+- **Only what's needed is read.** Pages must be HTML and at most 1 MB, and only their `<head>` is parsed. Answers
+  are cached like providers' answers, failures included.
+- **A discovered site doesn't get to choose a player's host.** A player is shown only when it comes from the page's
+  own host, and it plays in a `sandbox` that stops it navigating your page. Photos are shown, and anything else
+  (players from other hosts, posts that need a script) shows as the link.
+- **Each render discovers at most 5 uncached pages**, one after another. Embeds beyond that show as links until a
+  later render has discovered them.
+
+`BareUrlEmbedPlugin` still only embeds URLs that providers take, so a bare link to any site in a paragraph doesn't
+make the server fetch it.
+
 ## Showing embeds
 
 Render content with the same plugin settings as the field, and include the plugin's CSS on every page that shows it:
@@ -165,7 +195,8 @@ src/
   RichEditorPlusEmbedServiceProvider.php   Config, translations, and the built assets via RegistersPluginAssets
   EmbedPlugin.php             The `embed` node: NodeSpec, JsExtension, and the field's providers
   Providers/                  Provider, the built-in list, and the registry that matches URLs to providers
-  OEmbed/                     The HTTP client, the checked OEmbedResponse, the cache, and the Resolver tying them together
+  OEmbed/                     The HTTP client, the checked OEmbedResponse, the cache, the Resolver tying them together,
+                              Discovery, and the UrlGuard that keeps discovery off private networks
   Rendering/EmbedMarkup.php   Rebuilds a provider's markup for display from an oEmbed answer
   Actions/EmbedAction.php     The insert/edit modal
   EditorPreview.php           How embeds look in the editor: link, card or embed

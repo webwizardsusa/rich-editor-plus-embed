@@ -100,6 +100,7 @@ class EmbedMarkup
             'allowfullscreen' => $iframe->hasAttribute('allowfullscreen') || in_array('fullscreen', $features, true) ? '' : null,
             'loading' => 'lazy',
             'referrerpolicy' => 'strict-origin-when-cross-origin',
+            'sandbox' => $provider->sandboxesIframes() ? 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation' : null,
         ], static fn (?string $value): bool => $value !== null);
 
         // A video keeps its shape as it scales, and a portrait one no wider than it is; other players, such as audio,
