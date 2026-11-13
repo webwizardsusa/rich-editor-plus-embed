@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/webwizardsusa/rich-editor-plus-embed/compare/v0.2.0...v0.3.0) (2026-11-13)
+
+
+### Features
+
+* write embeds to Markdown as HTML blocks that read back as embeds ([#7](https://github.com/webwizardsusa/rich-editor-plus-embed/issues/7)) ([92fec97](https://github.com/webwizardsusa/rich-editor-plus-embed/commit/92fec97885b06fbda18966d1706635b39536321b))
+
 ## [0.2.0](https://github.com/webwizardsusa/rich-editor-plus-embed/compare/v0.1.0...v0.2.0) (2026-11-13)
 
 
