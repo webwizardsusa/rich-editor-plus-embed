@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/webwizardsusa/rich-editor-plus-embed/compare/v0.1.0...v0.2.0) (2026-11-13)
+
+
+### Features
+
+* add opt-in oEmbed discovery behind a private-network guard ([#5](https://github.com/webwizardsusa/rich-editor-plus-embed/issues/5)) ([93fe3f3](https://github.com/webwizardsusa/rich-editor-plus-embed/commit/93fe3f38bafeec2120a33dbab0da488f305cd880))
+
 ## 0.1.0 (2026-11-13)
 
 
