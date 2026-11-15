@@ -3,7 +3,10 @@
 oEmbed embeds for [Rich Editor Plus](https://github.com/webwizardsusa/filament-rich-editor-plus): paste a YouTube,
 Vimeo, X or other supported URL on an empty line, or choose Embed from the slash menu, and it becomes an embed.
 
-> Work in progress: the package works end to end, but hasn't been released yet.
+The lookups, providers, discovery and safe rendering come from
+[`webwizardsusa/laravel-oembed`](https://github.com/webwizardsusa/laravel-oembed), which works without the editor (in
+Blade views, or Filament fields, entries and columns). This package adds the editor's embed block, previews, pasting,
+Markdown and bare URLs.
 
 ```php
 use Webwizardsusa\RichEditorPlusEmbed\EmbedPlugin;
@@ -42,7 +45,7 @@ YouTube, Vimeo, Spotify, SoundCloud, X, TikTok, Bluesky and Flickr are built in.
 Change the list per field:
 
 ```php
-use Webwizardsusa\RichEditorPlusEmbed\Providers\Provider;
+use Webwizardsusa\OEmbed\Providers\Provider;
 
 EmbedPlugin::make()
     ->withoutProviders(['tiktok'])
@@ -61,10 +64,10 @@ domain and its subdomains, and `*` in the path matches anything. The endpoint mu
 requests it (never the URL being embedded) and doesn't follow redirects. `iframe()` names the hosts the provider's
 player may load from; `script()` is the script that turns a provider's `<blockquote>` into an embed.
 
-Answers are cached (a week by default, ten minutes for a failed lookup) in the store set by
-`RICH_EDITOR_PLUS_EMBED_CACHE_STORE`. Publish the config with
-`php artisan vendor:publish --tag=rich-editor-plus-embed-config` to change the times, the timeout or the default
-`maxwidth`.
+Answers are cached (a week by default, ten minutes for a failed lookup) in the store set by `OEMBED_CACHE_STORE`.
+Publish laravel-oembed's config with `php artisan vendor:publish --tag=oembed-config` to change the times, the timeout,
+the default `maxwidth`, or to turn discovery or privacy-enhanced YouTube on for every embedder. Settings without a
+method on the plugin go through `->embedder(fn (Embedder $embedder) => …)`.
 
 ### Discovery
 
@@ -207,14 +210,9 @@ content never holds third-party HTML:
 composer.json                 Requires webwizardsusa/filament-rich-editor-plus, registers the service provider
 package.json                  Vite and the TipTap packages, as dev dependencies only
 vite.config.js                `vite build` writes dist/; `vite` runs the dev server on port 5180
-config/rich-editor-plus-embed.php   Cache, timeout and maxwidth for oEmbed lookups
 src/
   RichEditorPlusEmbedServiceProvider.php   Config, translations, and the built assets via RegistersPluginAssets
   EmbedPlugin.php             The `embed` node: NodeSpec, JsExtension, and the field's providers
-  Providers/                  Provider, the built-in list, and the registry that matches URLs to providers
-  OEmbed/                     The HTTP client, the checked OEmbedResponse, the cache, the Resolver tying them together,
-                              Discovery, and the UrlGuard that keeps discovery off private networks
-  Rendering/EmbedMarkup.php   Rebuilds a provider's markup for display from an oEmbed answer
   Actions/EmbedAction.php     The insert/edit modal
   EditorPreview.php           How embeds look in the editor: link, card or embed
   BareUrlEmbedPlugin.php      Optional: shows paragraphs holding only a URL as its embed
@@ -228,6 +226,19 @@ resources/
   lang/en/plugins.php         Translations
 tests/                        Pest tests, run with Testbench
 ```
+
+## Upgrading to 0.4
+
+The oEmbed side moved to `webwizardsusa/laravel-oembed`, which Composer installs with this package.
+
+- **Namespaces:** `Webwizardsusa\RichEditorPlusEmbed\Providers\Provider` (and `BuiltInProviders`,
+  `ProviderRegistry`) is now `Webwizardsusa\OEmbed\Providers\…`, and the `OEmbed\…` and `Rendering\…` classes are
+  now under `Webwizardsusa\OEmbed\`.
+- **Config:** `config/rich-editor-plus-embed.php` is replaced by `config/oembed.php`, and
+  `RICH_EDITOR_PLUS_EMBED_CACHE_STORE` by `OEMBED_CACHE_STORE`. If you published the old config, publish the new one
+  with `php artisan vendor:publish --tag=oembed-config` and copy your values over.
+- **Cache keys** have a new prefix, so answers are looked up again once after upgrading.
+- **Unchanged:** `EmbedPlugin`'s methods, its stored and rendered HTML, the editor and Markdown.
 
 ## Testing
 

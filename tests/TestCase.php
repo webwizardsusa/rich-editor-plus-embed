@@ -17,6 +17,7 @@ use Illuminate\Foundation\Application;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Postare\BladeMdi\BladeMdiServiceProvider;
+use Webwizardsusa\OEmbed\OEmbedServiceProvider;
 use Webwizardsusa\RichEditorPlus\RichEditorPlusServiceProvider;
 use Webwizardsusa\RichEditorPlusEmbed\RichEditorPlusEmbedServiceProvider;
 
@@ -46,6 +47,7 @@ abstract class TestCase extends BaseTestCase
             WidgetsServiceProvider::class,
             FilamentServiceProvider::class,
             RichEditorPlusServiceProvider::class,
+            OEmbedServiceProvider::class,
             RichEditorPlusEmbedServiceProvider::class,
         ];
     }

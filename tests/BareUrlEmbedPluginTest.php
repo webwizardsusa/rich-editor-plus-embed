@@ -1,13 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use Webwizardsusa\OEmbed\Providers\Provider;
 use Webwizardsusa\RichEditorPlus\Plugins\Core\BoldPlugin;
 use Webwizardsusa\RichEditorPlus\Plugins\Core\LinkPlugin;
 use Webwizardsusa\RichEditorPlus\Rendering\RichContentPlusBatchRenderer;
 use Webwizardsusa\RichEditorPlus\Rendering\RichContentPlusRenderer;
 use Webwizardsusa\RichEditorPlusEmbed\BareUrlEmbedPlugin;
 use Webwizardsusa\RichEditorPlusEmbed\EmbedPlugin;
-use Webwizardsusa\RichEditorPlusEmbed\Providers\Provider;
 use Webwizardsusa\RichEditorPlusEmbed\Tests\TestCase;
 
 uses(TestCase::class);

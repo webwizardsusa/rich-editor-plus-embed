@@ -7,7 +7,8 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Webwizardsusa\RichEditorPlus\Support\RegistersPluginAssets;
 
 /**
- * Registers the package's config, translations and its built JS module and stylesheet. `RegistersPluginAssets` finds
+ * Registers the package's translations and its built JS module and stylesheet. Lookups are configured by
+ * `webwizardsusa/laravel-oembed` (`config/oembed.php`). `RegistersPluginAssets` finds
  * `dist/rich-editor-plus-embed.{js,css}`, or the Vite dev server while `public/rich-editor-plus-embed.hot` exists.
  */
 class RichEditorPlusEmbedServiceProvider extends PackageServiceProvider
@@ -18,7 +19,6 @@ class RichEditorPlusEmbedServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('rich-editor-plus-embed')
-            ->hasConfigFile()
             ->hasTranslations();
     }
 

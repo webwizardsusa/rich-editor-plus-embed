@@ -1,8 +1,8 @@
 <?php
 
+use Webwizardsusa\OEmbed\Providers\Provider;
 use Webwizardsusa\RichEditorPlus\Rendering\RichContentPlusRenderer;
 use Webwizardsusa\RichEditorPlusEmbed\EmbedPlugin;
-use Webwizardsusa\RichEditorPlusEmbed\Providers\Provider;
 use Webwizardsusa\RichEditorPlusEmbed\Tests\TestCase;
 
 uses(TestCase::class);

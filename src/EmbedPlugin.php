@@ -4,7 +4,13 @@ namespace Webwizardsusa\RichEditorPlusEmbed;
 
 use Closure;
 use DOMElement;
-use Webwizardsusa\RichEditorPlus\Content\ContentSpec;
+use Webwizardsusa\OEmbed\Embedder;
+use Webwizardsusa\OEmbed\OEmbedResponse;
+use Webwizardsusa\OEmbed\Providers\Provider;
+use Webwizardsusa\OEmbed\Providers\ProviderRegistry;
+use Webwizardsusa\OEmbed\Rendering\EmbedMarkup;
+use Webwizardsusa\OEmbed\Resolver;
+use Webwizardsusa\OEmbed\Support\Url;
 use Webwizardsusa\RichEditorPlus\Content\NodeSpec;
 use Webwizardsusa\RichEditorPlus\Plugins\Contracts\AnswersEditorRequests;
 use Webwizardsusa\RichEditorPlus\Plugins\Contracts\PatchesRenderedMarkup;
@@ -18,15 +24,6 @@ use Webwizardsusa\RichEditorPlus\Support\BlockType;
 use Webwizardsusa\RichEditorPlus\Support\JsExtension;
 use Webwizardsusa\RichEditorPlus\Support\Tool;
 use Webwizardsusa\RichEditorPlusEmbed\Actions\EmbedAction;
-use Webwizardsusa\RichEditorPlusEmbed\OEmbed\Discovery;
-use Webwizardsusa\RichEditorPlusEmbed\OEmbed\EmbedCache;
-use Webwizardsusa\RichEditorPlusEmbed\OEmbed\OEmbedClient;
-use Webwizardsusa\RichEditorPlusEmbed\OEmbed\OEmbedResponse;
-use Webwizardsusa\RichEditorPlusEmbed\OEmbed\Resolver;
-use Webwizardsusa\RichEditorPlusEmbed\Providers\BuiltInProviders;
-use Webwizardsusa\RichEditorPlusEmbed\Providers\Provider;
-use Webwizardsusa\RichEditorPlusEmbed\Providers\ProviderRegistry;
-use Webwizardsusa\RichEditorPlusEmbed\Rendering\EmbedMarkup;
 
 /**
  * Embedded content from a URL, such as a video or a post, stored as
@@ -53,25 +50,9 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
     protected EditorPreview $editorPreview = EditorPreview::Card;
 
     /**
-     * @var array<Provider> | null
+     * Which URLs are embedded and how, from `webwizardsusa/laravel-oembed`. The fluent methods below change it.
      */
-    protected ?array $providers = null;
-
-    /**
-     * @var array<Provider>
-     */
-    protected array $addedProviders = [];
-
-    /**
-     * @var array<string>
-     */
-    protected array $removedProviders = [];
-
-    protected ?int $maxWidth = null;
-
-    protected bool $isPrivacyEnhancedYouTube = false;
-
-    protected bool $discovers = false;
+    protected ?Embedder $embedder = null;
 
     /**
      * Embeds from these providers instead of the built-in ones.
@@ -80,7 +61,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
      */
     public function providers(array $providers): static
     {
-        $this->providers = $providers;
+        $this->getEmbedder()->providers($providers);
 
         return $this;
     }
@@ -92,7 +73,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
      */
     public function withProviders(array $providers): static
     {
-        $this->addedProviders = [...$this->addedProviders, ...$providers];
+        $this->getEmbedder()->withProviders($providers);
 
         return $this;
     }
@@ -102,17 +83,17 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
      */
     public function withoutProviders(array $names): static
     {
-        $this->removedProviders = [...$this->removedProviders, ...$names];
+        $this->getEmbedder()->withoutProviders($names);
 
         return $this;
     }
 
     /**
-     * The `maxwidth` sent to providers. Defaults to the `rich-editor-plus-embed.max_width` config value.
+     * The `maxwidth` sent to providers. Defaults to the `oembed.max_width` config value.
      */
     public function maxWidth(?int $width): static
     {
-        $this->maxWidth = $width;
+        $this->getEmbedder()->maxWidth($width);
 
         return $this;
     }
@@ -122,14 +103,14 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
      */
     public function privacyEnhancedYouTube(bool $condition = true): static
     {
-        $this->isPrivacyEnhancedYouTube = $condition;
+        $this->getEmbedder()->privacyEnhancedYouTube($condition);
 
         return $this;
     }
 
     public function isPrivacyEnhancedYouTube(): bool
     {
-        return $this->isPrivacyEnhancedYouTube;
+        return $this->getEmbedder()->isPrivacyEnhancedYouTube();
     }
 
     /**
@@ -155,39 +136,50 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
      */
     public function discovery(bool $condition = true): static
     {
-        $this->discovers = $condition;
+        $this->getEmbedder()->discovery($condition);
 
         return $this;
     }
 
     public function discovers(): bool
     {
-        return $this->discovers;
+        return $this->getEmbedder()->discovers();
     }
 
     public function getProviders(): ProviderRegistry
     {
-        return ProviderRegistry::make($this->providers ?? BuiltInProviders::all())
-            ->add($this->addedProviders)
-            ->remove($this->removedProviders);
+        return $this->getEmbedder()->getProviders();
     }
 
     public function getMaxWidth(): ?int
     {
-        $configured = config('rich-editor-plus-embed.max_width');
-
-        return $this->maxWidth ?? (is_numeric($configured) ? (int) $configured : null);
+        return $this->getEmbedder()->getMaxWidth();
     }
 
     public function getResolver(): Resolver
     {
-        return new Resolver(
-            $this->getProviders(),
-            OEmbedClient::fromConfig(),
-            EmbedCache::fromConfig(),
-            $this->getMaxWidth(),
-            $this->discovers ? Discovery::fromConfig() : null,
-        );
+        return $this->getEmbedder()->getResolver();
+    }
+
+    /**
+     * Another embedder, or a callback that changes this one: `->embedder(fn (Embedder $embedder) => $embedder->…)`.
+     *
+     * @param  Embedder | (Closure(Embedder): mixed)  $embedder
+     */
+    public function embedder(Embedder|Closure $embedder): static
+    {
+        if ($embedder instanceof Closure) {
+            $embedder($this->getEmbedder());
+        } else {
+            $this->embedder = $embedder;
+        }
+
+        return $this;
+    }
+
+    public function getEmbedder(): Embedder
+    {
+        return $this->embedder ??= Embedder::make();
     }
 
     public function getId(): string
@@ -288,7 +280,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
             return false;
         }
 
-        return $this->discovers || $this->getProviders()->match(trim($url)) !== null;
+        return $this->discovers() || $this->getProviders()->match(trim($url)) !== null;
     }
 
     protected function answerResolveRequest(mixed $url): array
@@ -343,8 +335,9 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
         $noAttributes = static fn (): array => [];
 
         $providers = $this->getProviders();
-        $markup = new EmbedMarkup($this->isPrivacyEnhancedYouTube);
-        $discovers = $this->discovers;
+        // The editor's figures keep their `rep-embed` classes.
+        $markup = $this->getEmbedder()->markup('rep-embed');
+        $discovers = $this->discovers();
 
         return [
             NodeSpec::make('embed')
@@ -483,7 +476,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
             // Only for spotting pasted URLs worth asking about; the server decides what is embedded.
             'hosts' => array_values(array_unique($hosts)),
             // With discovery, any pasted URL is worth asking about.
-            'discovery' => $this->discovers,
+            'discovery' => $this->discovers(),
             'providers' => array_map(static fn (Provider $provider): string => $provider->getLabel(), $providers),
             'labels' => [
                 'loading' => __('rich-editor-plus-embed::plugins.embed.editor.loading'),
@@ -499,9 +492,7 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
      */
     public static function isAllowedUrl(mixed $url): bool
     {
-        return is_string($url)
-            && preg_match('#^\s*https?://#i', $url) === 1
-            && ContentSpec::isAllowedUrl($url, ['http', 'https']);
+        return Url::isAllowed($url);
     }
 
     /**
