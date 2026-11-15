@@ -64,8 +64,9 @@ domain and its subdomains, and `*` in the path matches anything. The endpoint mu
 requests it (never the URL being embedded) and doesn't follow redirects. `iframe()` names the hosts the provider's
 player may load from; `script()` is the script that turns a provider's `<blockquote>` into an embed.
 
-Answers are cached (a week by default, ten minutes for a failed lookup) in the store set by `OEMBED_CACHE_STORE`.
-Publish laravel-oembed's config with `php artisan vendor:publish --tag=oembed-config` to change the times, the timeout,
+Answers are kept a week by default, and failed lookups ten minutes, in the cache, or in a database table with
+`OEMBED_STORE=database` (see laravel-oembed's README for the migration and for adding your own store). Publish
+laravel-oembed's config with `php artisan vendor:publish --tag=oembed-config` to change the store, the times, the timeout,
 the default `maxwidth`, or to turn discovery or privacy-enhanced YouTube on for every embedder. Settings without a
 method on the plugin go through `->embedder(fn (Embedder $embedder) => …)`.
 
