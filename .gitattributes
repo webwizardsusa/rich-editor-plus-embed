@@ -1,6 +1,6 @@
 * text=auto eol=lf
 
-# Left out of the archive Composer installs: only src/, config/, resources/, dist/ and the docs ship.
+# Left out of the archive Composer installs: only src/, resources/ (translations), dist/ and the docs ship.
 /tests              export-ignore
 /resources/js       export-ignore
 /resources/css      export-ignore

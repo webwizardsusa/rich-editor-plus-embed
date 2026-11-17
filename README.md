@@ -212,7 +212,7 @@ composer.json                 Requires webwizardsusa/filament-rich-editor-plus, 
 package.json                  Vite and the TipTap packages, as dev dependencies only
 vite.config.js                `vite build` writes dist/; `vite` runs the dev server on port 5180
 src/
-  RichEditorPlusEmbedServiceProvider.php   Config, translations, and the built assets via RegistersPluginAssets
+  RichEditorPlusEmbedServiceProvider.php   Translations and the built assets (via RegistersPluginAssets)
   EmbedPlugin.php             The `embed` node: NodeSpec, JsExtension, and the field's providers
   Actions/EmbedAction.php     The insert/edit modal
   EditorPreview.php           How embeds look in the editor: link, card or embed
