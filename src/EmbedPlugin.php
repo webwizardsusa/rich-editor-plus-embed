@@ -269,9 +269,6 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
     }
 
     /**
-     * @return array<string, mixed>
-     */
-    /**
      * Whether the URL may be looked up at all: one a provider takes, or, with discovery, any http(s) URL.
      */
     public function takes(mixed $url): bool
@@ -283,6 +280,9 @@ class EmbedPlugin extends Plugin implements AnswersEditorRequests, PatchesRender
         return $this->discovers() || $this->getProviders()->match(trim($url)) !== null;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function answerResolveRequest(mixed $url): array
     {
         if (! $this->takes($url)) {
