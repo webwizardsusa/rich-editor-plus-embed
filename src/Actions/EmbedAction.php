@@ -6,10 +6,10 @@ use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Support\Enums\Width;
+use Webwizardsusa\OEmbed\Providers\Provider;
 use Webwizardsusa\RichEditorPlus\RichEditorPlus;
 use Webwizardsusa\RichEditorPlus\Support\EditorCommand;
 use Webwizardsusa\RichEditorPlusEmbed\EmbedPlugin;
-use Webwizardsusa\RichEditorPlusEmbed\Providers\Provider;
 
 /**
  * The modal for inserting an embed, or editing the selected one. The browser mounts it with the selection and, when

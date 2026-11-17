@@ -2,12 +2,12 @@
 
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Webwizardsusa\OEmbed\Resolver;
+use Webwizardsusa\OEmbed\UrlGuard;
 use Webwizardsusa\RichEditorPlus\Rendering\RichContentPlusRenderer;
 use Webwizardsusa\RichEditorPlus\RichEditorPlus;
 use Webwizardsusa\RichEditorPlus\Support\PluginRegistry;
 use Webwizardsusa\RichEditorPlusEmbed\EmbedPlugin;
-use Webwizardsusa\RichEditorPlusEmbed\OEmbed\Resolver;
-use Webwizardsusa\RichEditorPlusEmbed\OEmbed\UrlGuard;
 use Webwizardsusa\RichEditorPlusEmbed\Tests\TestCase;
 
 uses(TestCase::class);
