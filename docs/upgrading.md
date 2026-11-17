@@ -1,15 +1,10 @@
 ---
 title: Upgrading
 weight: 90
-description: Upgrading from 0.3 to the release that moves lookups to Laravel oEmbed.
+description: Upgrading from 0.3 to 0.4, which moves lookups to Laravel oEmbed.
 ---
 
-## From 0.3 to the next release
-
-> [!NOTE]
-> The latest release is 0.3.0. These notes are for the next release, expected to be 0.4.0, which moves the oEmbed
-> side to Laravel oEmbed. They don't apply until that release is out; if you install 0.3.x, nothing here has changed
-> yet.
+## From 0.3 to 0.4
 
 The providers, the oEmbed client, the cache, discovery, the private-network guard and the markup builder moved to
 [`webwizardsusa/laravel-oembed`](docs:laravel-oembed/introduction), which Composer installs with this package.
@@ -26,7 +21,7 @@ The providers, the oEmbed client, the cache, discovery, the private-network guar
 
 If your code builds providers or uses the oEmbed classes directly, update the imports:
 
-| 0.3 | Now |
+| 0.3 | 0.4 |
 |---|---|
 | `Webwizardsusa\RichEditorPlusEmbed\Providers\Provider` | `Webwizardsusa\OEmbed\Providers\Provider` |
 | `Webwizardsusa\RichEditorPlusEmbed\Providers\BuiltInProviders` | `Webwizardsusa\OEmbed\Providers\BuiltInProviders` |
@@ -51,7 +46,7 @@ config, publish the new one, copy your values over, and delete the old file:
 php artisan vendor:publish --tag=oembed-config
 ```
 
-| 0.3 key | Now |
+| 0.3 key | 0.4 |
 |---|---|
 | `rich-editor-plus-embed.cache.store` | `oembed.cache.store` |
 | `rich-editor-plus-embed.cache.ttl` | `oembed.ttl` |
