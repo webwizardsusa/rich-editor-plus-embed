@@ -42,7 +42,7 @@ any of them or [add your own](extending.md#custom-providers).
 ## Requirements
 
 - PHP 8.3 or later
-- Rich Editor Plus 0.1 (and so Filament 5)
+- Rich Editor Plus 0.1 or 0.2 (and so Filament 5)
 - Laravel oEmbed, installed automatically
 
 ## Where to go next
