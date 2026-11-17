@@ -27,8 +27,8 @@ RichEditorPlus::make('content')->addPlugins([
 
 ## Documentation
 
-Read the full documentation at
-[https://DOCS_SITE_URL/docs/rich-editor-plus-embed](https://DOCS_SITE_URL/docs/rich-editor-plus-embed).
+Read the full documentation in the
+[`docs` folder](https://github.com/webwizardsusa/rich-editor-plus-embed/tree/main/docs).
 
 ## License
 
