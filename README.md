@@ -1,5 +1,8 @@
 # Rich Editor Plus Embed
 
+> **Under active development.** This package is still changing and may not be ready for production use yet. Until
+> 1.0, a minor release can include breaking changes, so check the changelog before you upgrade.
+
 [![Latest version on Packagist](https://img.shields.io/packagist/v/webwizardsusa/rich-editor-plus-embed.svg)](https://packagist.org/packages/webwizardsusa/rich-editor-plus-embed)
 [![Tests](https://github.com/webwizardsusa/rich-editor-plus-embed/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/webwizardsusa/rich-editor-plus-embed/actions/workflows/tests.yml)
 [![Total downloads](https://img.shields.io/packagist/dt/webwizardsusa/rich-editor-plus-embed.svg)](https://packagist.org/packages/webwizardsusa/rich-editor-plus-embed/stats)
