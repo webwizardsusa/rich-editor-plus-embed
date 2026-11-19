@@ -37,6 +37,10 @@ RichEditorPlus::make('content')->addPlugins([
 Read the full documentation in the
 [`docs` folder](https://github.com/webwizardsusa/rich-editor-plus-embed/tree/main/docs).
 
+## About Us
+
+This package is developed and maintained by [WebWizardsUSA](https://webwizardsusa.com/), a top rated web development agency on Upwork.
+
 ## License
 
 The MIT License (MIT). See [LICENSE.md](LICENSE.md).
